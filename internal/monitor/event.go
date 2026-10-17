@@ -38,9 +38,17 @@ type Event struct {
 }
 
 func (e Event) Validate() error {
-	if e.ID == "" { return fmt.Errorf("event id is required") }
-	if e.Chain != ChainSolana && e.Chain != ChainEVM { return fmt.Errorf("unsupported chain: %q", e.Chain) }
-	if e.Type != EventTokenLaunch && e.Type != EventPriceMovement && e.Type != EventLiquidityChange && e.Type != EventWalletTransfer { return fmt.Errorf("unsupported event type: %q", e.Type) }
-	if e.ObservedAt.IsZero() { return fmt.Errorf("observed_at is required") }
+	if e.ID == "" {
+		return fmt.Errorf("event id is required")
+	}
+	if e.Chain != ChainSolana && e.Chain != ChainEVM {
+		return fmt.Errorf("unsupported chain: %q", e.Chain)
+	}
+	if e.Type != EventTokenLaunch && e.Type != EventPriceMovement && e.Type != EventLiquidityChange && e.Type != EventWalletTransfer {
+		return fmt.Errorf("unsupported event type: %q", e.Type)
+	}
+	if e.ObservedAt.IsZero() {
+		return fmt.Errorf("observed_at is required")
+	}
 	return nil
 }

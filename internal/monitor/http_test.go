@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"smartx-monitor/internal/signals"
 )
@@ -14,7 +15,7 @@ import (
 func TestHTTPContract(t *testing.T) {
 	service := NewService(slog.New(slog.NewTextHandler(io.Discard, nil)), 1)
 	service.SetAnalyzer(signals.NewAnalyzer(1000))
-	service.Publish(Event{ID: "e1", Asset: "TOKEN", Type: EventTokenLaunch})
+	service.Publish(Event{ID: "e1", Chain: ChainSolana, Asset: "TOKEN", Type: EventTokenLaunch, ObservedAt: time.Now()})
 	handler := service.Handler()
 
 	for _, path := range []string{"/healthz", "/readyz", "/v1/signals", "/metrics"} {

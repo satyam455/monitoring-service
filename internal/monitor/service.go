@@ -78,6 +78,10 @@ func (s *Service) Run(ctx context.Context) {
 }
 
 func (s *Service) Publish(event Event) bool {
+	if err := event.Validate(); err != nil {
+		s.dropped.Add(1)
+		return false
+	}
 	if event.ID != "" {
 		s.seenMu.Lock()
 		if _, exists := s.seen[event.ID]; exists {
