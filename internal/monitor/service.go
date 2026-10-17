@@ -47,6 +47,9 @@ func (s *Service) SetAnalyzer(analyzer *signals.Analyzer) { s.analyzer = analyze
 func (s *Service) SetAPIKey(apiKey string)                { s.apiKey = apiKey }
 
 func NewService(logger *slog.Logger, workers int) *Service {
+	if logger == nil {
+		logger = slog.Default()
+	}
 	if workers < 1 {
 		workers = 1
 	}
