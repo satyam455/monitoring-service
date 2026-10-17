@@ -8,7 +8,7 @@ services:
       SOLANA_WS_URL: "wss://api.devnet.solana.com"
       SOLANA_NETWORK: "devnet"
       EVM_WS_URL: ""
-      POSTGRES_URL: ""
+      POSTGRES_URL: "postgres://smartx:smartx@postgres:5432/monitoring?sslmode=disable"
       REDIS_ADDRESS: "redis:6379"
       API_KEY: "${API_KEY:-change-me-in-development}"
     depends_on:
