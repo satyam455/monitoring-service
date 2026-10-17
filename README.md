@@ -3,7 +3,7 @@
 SmartX Token Monitor is a Go service for chain-neutral, real-time token monitoring.
 
 It includes Solana and EVM WebSocket ingestion, normalized events, concurrent
-processing, PostgreSQL persistence, Redis caching, wallet signals, API-key
+processing, PostgreSQL storage boundaries, Redis caching, wallet signals, API-key
 protection, Prometheus metrics, reconnect backoff, CI, and Docker deployment.
 
 ## Run
@@ -23,7 +23,9 @@ race-enabled tests, `go vet`, and a container build.
 The SmartX-facing API is documented in [openapi.yaml](openapi.yaml).
 Set `API_KEY` to protect `/v1/*` endpoints with the `X-API-Key` header.
 
-For Docker Compose, PostgreSQL persistence is enabled automatically. Set a
+For Docker Compose, PostgreSQL is provisioned automatically. The Go 1.22 build
+keeps the database boundary ready, while a PostgreSQL driver must be added to
+activate writes. Set a
 strong API key before deployment:
 
 ```bash

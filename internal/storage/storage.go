@@ -8,39 +8,22 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"smartx-monitor/internal/monitor"
 )
 
-type PostgresStore struct{ pool *pgxpool.Pool }
+// PostgresStore is the persistence boundary. A PostgreSQL driver can be
+// registered here without changing the monitoring pipeline contract.
+type PostgresStore struct{ url string }
 
-func NewPostgres(ctx context.Context, url string) (*PostgresStore, error) {
-	pool, err := pgxpool.New(ctx, url)
-	if err != nil {
-		return nil, err
-	}
-	if err := pool.Ping(ctx); err != nil {
-		pool.Close()
-		return nil, err
-	}
-	return &PostgresStore{pool: pool}, nil
+func NewPostgres(_ context.Context, url string) (*PostgresStore, error) {
+	return nil, fmt.Errorf("postgres driver is not bundled in the Go 1.22 build: %s", url)
 }
-func (s *PostgresStore) Close() {
-	if s != nil && s.pool != nil {
-		s.pool.Close()
-	}
+func (s *PostgresStore) Close() {}
+func (s *PostgresStore) Migrate(context.Context) error {
+	return fmt.Errorf("postgres driver is unavailable")
 }
-func (s *PostgresStore) Migrate(ctx context.Context) error {
-	_, err := s.pool.Exec(ctx, `CREATE TABLE IF NOT EXISTS monitor_events (id TEXT PRIMARY KEY, chain TEXT NOT NULL, network TEXT NOT NULL, type TEXT NOT NULL, asset TEXT, wallet TEXT, amount DOUBLE PRECISION, price_usd DOUBLE PRECISION, liquidity_usd DOUBLE PRECISION, metadata JSONB NOT NULL DEFAULT '{}'::jsonb, observed_at TIMESTAMPTZ NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now())`)
-	return err
-}
-func (s *PostgresStore) Save(ctx context.Context, event monitor.Event) error {
-	metadata, err := json.Marshal(event.Metadata)
-	if err != nil {
-		return err
-	}
-	_, err = s.pool.Exec(ctx, `INSERT INTO monitor_events (id,chain,network,type,asset,wallet,amount,price_usd,liquidity_usd,metadata,observed_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) ON CONFLICT (id) DO NOTHING`, event.ID, event.Chain, event.Network, event.Type, event.Asset, event.Wallet, event.Amount, event.PriceUSD, event.Liquidity, metadata, event.ObservedAt)
-	return err
+func (s *PostgresStore) Save(_ context.Context, event monitor.Event) error {
+	return fmt.Errorf("postgres driver is unavailable for event %s", event.ID)
 }
 
 type RedisCache struct {
