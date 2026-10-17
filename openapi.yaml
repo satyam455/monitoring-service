@@ -1,0 +1,68 @@
+openapi: 3.0.3
+info:
+  title: SmartX Token Monitor API
+  version: 0.1.0
+  description: Chain-neutral monitoring and market-signal API.
+servers:
+  - url: http://localhost:8080
+paths:
+  /healthz:
+    get:
+      summary: Liveness check
+      responses:
+        '200':
+          description: Service is alive
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Status' }
+  /readyz:
+    get:
+      summary: Readiness and processed-event count
+      responses:
+        '200':
+          description: Service is ready
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ready }
+                  processed: { type: integer, format: int64 }
+  /v1/signals:
+    get:
+      summary: Latest asset signals
+      responses:
+        '200':
+          description: Current signal snapshot
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Insight' }
+        '503': { description: Signal analyzer unavailable }
+  /metrics:
+    get:
+      summary: Prometheus metrics
+      responses:
+        '200':
+          description: Prometheus text exposition
+          content:
+            text/plain:
+              schema: { type: string }
+components:
+  schemas:
+    Status:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, example: ok }
+    Insight:
+      type: object
+      required: [asset, signal, score, large_wallet, events, updated_at]
+      properties:
+        asset: { type: string }
+        signal: { type: string, enum: [neutral, watch, strong] }
+        score: { type: integer }
+        large_wallet: { type: boolean }
+        events: { type: integer, format: int64 }
+        updated_at: { type: string, format: date-time }

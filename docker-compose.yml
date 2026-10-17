@@ -1,0 +1,36 @@
+services:
+  monitor:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      HTTP_ADDR: ":8080"
+      SOLANA_WS_URL: "wss://api.devnet.solana.com"
+      SOLANA_NETWORK: "devnet"
+      EVM_WS_URL: ""
+      POSTGRES_URL: ""
+      REDIS_ADDRESS: "redis:6379"
+      API_KEY: "${API_KEY:-change-me-in-development}"
+    depends_on:
+      - redis
+      - postgres
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: smartx
+      POSTGRES_PASSWORD: smartx
+      POSTGRES_DB: monitoring
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d:ro
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:
