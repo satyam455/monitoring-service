@@ -20,6 +20,10 @@ type Service struct {
 	dropped   atomic.Uint64
 	stopOnce  sync.Once
 	stop      chan struct{}
+	seenMu    sync.Mutex
+	seen      map[string]struct{}
+	seenOrder []string
+	seenLimit int
 	store     EventStore
 	cache     interface {
 		Set(context.Context, Event) error
@@ -45,7 +49,7 @@ func NewService(logger *slog.Logger, workers int) *Service {
 	if workers < 1 {
 		workers = 1
 	}
-	return &Service{logger: logger, events: make(chan Event, workers*16), workers: workers, stop: make(chan struct{})}
+	return &Service{logger: logger, events: make(chan Event, workers*16), workers: workers, stop: make(chan struct{}), seen: make(map[string]struct{}), seenLimit: 100000}
 }
 
 func (s *Service) Run(ctx context.Context) {
@@ -70,6 +74,20 @@ func (s *Service) Run(ctx context.Context) {
 }
 
 func (s *Service) Publish(event Event) bool {
+	if event.ID != "" {
+		s.seenMu.Lock()
+		if _, exists := s.seen[event.ID]; exists {
+			s.seenMu.Unlock()
+			return true
+		}
+		s.seen[event.ID] = struct{}{}
+		s.seenOrder = append(s.seenOrder, event.ID)
+		if len(s.seenOrder) > s.seenLimit {
+			delete(s.seen, s.seenOrder[0])
+			s.seenOrder = s.seenOrder[1:]
+		}
+		s.seenMu.Unlock()
+	}
 	select {
 	case s.events <- event:
 		return true
