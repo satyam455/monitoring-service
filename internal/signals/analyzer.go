@@ -1,6 +1,7 @@
 package signals
 
 import (
+	"sort"
 	"sync"
 	"time"
 )
@@ -50,6 +51,9 @@ func (a *Analyzer) Observe(event Event) {
 	if i.LargeWallet {
 		i.Score += 15
 	}
+	if i.Score > 100 {
+		i.Score = 100
+	}
 	if i.Score >= 35 {
 		i.Signal = "strong"
 	} else if i.Score >= 15 {
@@ -66,5 +70,11 @@ func (a *Analyzer) Snapshot() []Insight {
 	for _, i := range a.insights {
 		result = append(result, i)
 	}
+	sort.Slice(result, func(i, j int) bool {
+		if result[i].Score == result[j].Score {
+			return result[i].Asset < result[j].Asset
+		}
+		return result[i].Score > result[j].Score
+	})
 	return result
 }
