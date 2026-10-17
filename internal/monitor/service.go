@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"log/slog"
 	"smartx-monitor/internal/signals"
@@ -103,16 +104,18 @@ func (s *Service) Stop() { s.stopOnce.Do(func() { close(s.stop) }) }
 
 func (s *Service) process(worker int, event Event) {
 	s.processed.Add(1)
+	storageCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 	if s.analyzer != nil {
 		s.analyzer.Observe(signals.Event{Asset: event.Asset, Wallet: event.Wallet, Type: string(event.Type), Amount: event.Amount, PriceUSD: event.PriceUSD, Liquidity: event.Liquidity, ObservedAt: event.ObservedAt})
 	}
 	if s.store != nil {
-		if err := s.store.Save(context.Background(), event); err != nil {
+		if err := s.store.Save(storageCtx, event); err != nil {
 			s.logger.Error("persist event", "event_id", event.ID, "error", err)
 		}
 	}
 	if s.cache != nil {
-		if err := s.cache.Set(context.Background(), event); err != nil {
+		if err := s.cache.Set(storageCtx, event); err != nil {
 			s.logger.Error("cache event", "event_id", event.ID, "error", err)
 		}
 	}

@@ -64,6 +64,9 @@ func (r *RedisCache) Set(ctx context.Context, event monitor.Event) error {
 		return err
 	}
 	defer conn.Close()
+	if deadline, ok := ctx.Deadline(); ok {
+		_ = conn.SetDeadline(deadline)
+	}
 	seconds := int(r.ttl / time.Second)
 	if seconds < 1 {
 		seconds = 60
